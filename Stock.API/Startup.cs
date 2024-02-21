@@ -25,10 +25,10 @@ namespace Stock.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
             services.AddMassTransit(x =>
             {
                 x.AddConsumer<OrderCreatedEventConsumer>();
+                x.AddConsumer<PaymentFailedEventConsumer>();
 
                 x.UsingRabbitMq((context, cfg) =>
                 {
@@ -38,8 +38,12 @@ namespace Stock.API
                     {
                         e.ConfigureConsumer<OrderCreatedEventConsumer>(context);
                     });
-                });
 
+                    cfg.ReceiveEndpoint(RabbitMQSettingsConst.StockPaymentFailedEventQueueName, e =>
+                    {
+                        e.ConfigureConsumer<PaymentFailedEventConsumer>(context);
+                    });
+                });
             });
 
             services.Configure<MassTransitHostOptions>(options =>

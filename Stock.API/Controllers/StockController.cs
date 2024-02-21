@@ -17,6 +17,7 @@ namespace Stock.API.Controllers
             _context = context;
         }
 
+        [HttpGet]
         public async Task<IActionResult> Get()
         {
             return Ok(await _context.Stocks.ToListAsync());

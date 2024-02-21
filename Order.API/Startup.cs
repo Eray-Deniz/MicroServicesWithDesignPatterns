@@ -6,7 +6,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using Order.API.Consumers;
 using Order.API.Models;
+using Shared;
 using System;
 
 namespace Order.API
@@ -23,14 +25,30 @@ namespace Order.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
             services.AddMassTransit(x =>
             {
+                x.AddConsumer<PaymentCompletedEventConsumer>();
+                x.AddConsumer<PaymentFailedEventConsumer>();
+                x.AddConsumer<StockNotReservedEventConsumer>();
                 x.UsingRabbitMq((context, cfg) =>
                 {
                     cfg.Host(Configuration.GetConnectionString("RabbitMQ"));
-                });
 
+                    cfg.ReceiveEndpoint(RabbitMQSettingsConst.OrderPaymentCompletedEventQueueName, e =>
+                    {
+                        e.ConfigureConsumer<PaymentCompletedEventConsumer>(context);
+                    });
+
+                    cfg.ReceiveEndpoint(RabbitMQSettingsConst.OrderPaymentFailedEventQueueName, e =>
+                    {
+                        e.ConfigureConsumer<PaymentFailedEventConsumer>(context);
+                    });
+
+                    cfg.ReceiveEndpoint(RabbitMQSettingsConst.OrderStockNotReservedEventQueueName, e =>
+                    {
+                        e.ConfigureConsumer<StockNotReservedEventConsumer>(context);
+                    });
+                });
             });
 
             services.Configure<MassTransitHostOptions>(options =>
@@ -75,6 +93,4 @@ namespace Order.API
             });
         }
     }
-
-
 }

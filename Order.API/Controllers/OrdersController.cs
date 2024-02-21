@@ -41,7 +41,6 @@ namespace Order.API.Controllers
                     Price = item.Price,
                     ProductId = item.ProductId,
                     Count = item.Count
-
                 });
             }
             );
@@ -60,7 +59,6 @@ namespace Order.API.Controllers
                     Expiration = orderCreate.payment.Expiration,
                     CVV = orderCreate.payment.CVV,
                     TotalPrice = orderCreate.orderItems.Sum(item => item.Price * item.Count)
-
                 }
             };
 
@@ -74,6 +72,11 @@ namespace Order.API.Controllers
             }
             );
 
+            /*
+            Publish ile gönderilen mesajda RabitMQ Exchange e mesaj gönderir, kimlerin dinlediği bilinmez, exchange e subsucribe olmuş kuyruk yoksa(dinleyen yoksa) mesaj boşa gider.
+            Send ile gönderilen mesajlar direk olarak kuyruğa gider. Genellikle tek bir microservis(payment gibi) dinliyorsa send ile gönderilir.
+            Gönderilen event i birden fazla servis dinleyecekse publish, tek bir servis dinleyecekse send ile gönderilir.
+            */
             await _publishEndpoint.Publish(orderCreatedEvent);
 
             return Ok();
